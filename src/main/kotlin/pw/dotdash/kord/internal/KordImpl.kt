@@ -63,7 +63,7 @@ class KordImpl constructor(
         if (cached == null || cached !is GuildImpl) {
             return http.getEntity("guilds/$id", GuildImpl.serializer())?.also {
                 for (role in it.roles) {
-                    role.kord = it.kord
+                    role.init(this@KordImpl)
                 }
             }
         }
