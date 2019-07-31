@@ -1,0 +1,15 @@
+Guild -------------------------------------------
+
+- Get Guild
+- Get Guild Member
+- List Guild Members
+- Get Guild Roles
+- Create Guild Roles
+- Get Guild Voice Regions
+- Get Guild Embed
+- Modify Guild Embed
+
+User --------------------------------------------
+
+- Get Current User
+- Get User
