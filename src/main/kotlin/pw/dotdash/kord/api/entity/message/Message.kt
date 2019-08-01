@@ -5,6 +5,7 @@ import pw.dotdash.kord.api.entity.Entity
 import pw.dotdash.kord.api.entity.Identifiable
 import pw.dotdash.kord.api.entity.channel.TextChannel
 import pw.dotdash.kord.api.entity.guild.Guild
+import pw.dotdash.kord.api.entity.guild.Member
 import pw.dotdash.kord.api.entity.user.User
 import java.time.OffsetDateTime
 
@@ -25,6 +26,8 @@ interface Message : Entity, Identifiable {
     val timestamp: OffsetDateTime
 
     val editedTimestamp: OffsetDateTime?
+
+    val edited: Boolean
 
     val tts: Boolean
 
@@ -50,9 +53,13 @@ interface Message : Entity, Identifiable {
 
     val application: Application?
 
+    val jumpUrl: String
+
     suspend fun channel(): TextChannel
 
-    suspend fun guild(): Guild
+    suspend fun guild(): Guild?
+
+    suspend fun member(): Member?
 
     suspend fun createReaction(emoji: Emoji): Boolean
 

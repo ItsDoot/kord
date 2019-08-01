@@ -75,14 +75,11 @@ data class GuildImpl(
 
     override suspend fun init(kord: KordImpl) {
         this.kord = kord
-    }
-
-    fun initCaches(provider: GuildCacheProvider) {
-        this.emojiCache = provider.emojis()
-        this.memberCache = provider.members()
-        this.roleCache = provider.roles()
-        this.textChannelCache = provider.textChannels()
-        this.voiceChannelCache = provider.voiceChannels()
+        this.emojiCache = kord.cacheProvider.guildProvider.emojis()
+        this.memberCache = kord.cacheProvider.guildProvider.members()
+        this.roleCache = kord.cacheProvider.guildProvider.roles()
+        this.textChannelCache = kord.cacheProvider.guildProvider.textChannels()
+        this.voiceChannelCache = kord.cacheProvider.guildProvider.voiceChannels()
     }
 
     override suspend fun getMember(id: Long): MemberImpl? =

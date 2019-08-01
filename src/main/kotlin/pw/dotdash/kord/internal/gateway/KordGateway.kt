@@ -4,6 +4,7 @@ import io.ktor.client.HttpClient
 import io.ktor.client.features.websocket.ClientWebSocketSession
 import io.ktor.client.features.websocket.wss
 import io.ktor.http.cio.websocket.Frame
+import io.ktor.http.cio.websocket.readReason
 import io.ktor.http.cio.websocket.readText
 import io.ktor.http.cio.websocket.send
 import kotlinx.coroutines.Job
@@ -17,16 +18,24 @@ import pw.dotdash.kord.internal.KordImpl
 import pw.dotdash.kord.internal.KordImpl.Companion.JSON
 import pw.dotdash.kord.internal.event.LazyEvent
 import pw.dotdash.kord.internal.event.ReadyEventImpl
+import pw.dotdash.kord.internal.event.guild.CreateGuildEventImpl
 import pw.dotdash.kord.internal.event.message.CreateMessageEventImpl
+import pw.dotdash.kord.internal.event.message.DeleteMessageEventImpl
 import pw.dotdash.kord.internal.serial.nullable
 
 class KordGateway(val kord: KordImpl, private val token: String, val http: HttpClient) {
 
     private val logger = KotlinLogging.logger("KordGateway")
 
+    var session: ClientWebSocketSession? = null
+    val connected: Boolean get() = session != null
+
     var heartbeatJob: Job? = null
     var heartbeatAck: Boolean = true
     var lastSeq: Int? = null
+    var sessionId: String? = null
+
+    var reconnecting: Boolean = false
 
     private val heartbeatPayload: GatewayPayload<Int?>
         get() = GatewayPayload(
@@ -44,28 +53,37 @@ class KordGateway(val kord: KordImpl, private val token: String, val http: HttpC
             )
         )
 
-    suspend fun connect() {
+    tailrec suspend fun connect() {
         val gatewayInfo = requireNotNull(kord.http.get("gateway/bot", GatewayInfo.serializer())) {
             "Failed to fetch gateway information"
         }
 
         http.wss(urlString = gatewayInfo.url + "/?v=6&encoding=json", block = this::handleSession)
+        this.session = null
+
+        if (reconnecting) {
+            connect()
+        }
     }
 
     private suspend fun handleSession(session: ClientWebSocketSession) {
-        println("Connected to the gateway.")
+        logger.info { "Connected to the gateway." }
+        this.session = session
 
         for (frame in session.incoming) {
-            when (frame) {
-                is Frame.Text -> {
-                    val payload = JSON.parse(GatewayPayload.serializer(JsonElement.serializer().nullable), frame.readText())
-                    this.handlePayload(session, payload)
-                }
-                is Frame.Close -> {
-                    println("Websocket closed by host.")
-                }
+            if (frame is Frame.Close) {
+                val reason = frame.readReason()
+
+
             }
+
+            if (frame !is Frame.Text) continue
+
+            val payload = JSON.parse(GatewayPayload.serializer(JsonElement.serializer().nullable), frame.readText())
+            this.handlePayload(session, payload)
         }
+
+        logger.info { "Websocket closed by remote server." }
     }
 
     private suspend fun handlePayload(session: ClientWebSocketSession, payload: GatewayPayload<JsonElement?>) {
@@ -77,11 +95,11 @@ class KordGateway(val kord: KordImpl, private val token: String, val http: HttpC
                 session.sendHeartbeat()
             }
             7 -> { // Reconnect
-                println("Received reconnect")
+                logger.debug { "Received reconnect" }
                 session.close()
             }
             9 -> { // Invalid Session
-                println("Received invalid session")
+                logger.debug { "Received invalid session" }
                 session.close()
             }
             10 -> { // Hello
@@ -105,10 +123,10 @@ class KordGateway(val kord: KordImpl, private val token: String, val http: HttpC
             }
             11 -> { // Heartbeat Ack
                 heartbeatAck = true
-                println("Heartbeat acknowledged.")
+                logger.debug { "Heartbeat acknowledged." }
             }
             else -> {
-                println("Unhandled payload op: ${payload.op}")
+                logger.warn { "Unhandled payload op: ${payload.op}" }
             }
         }
     }
@@ -121,10 +139,17 @@ class KordGateway(val kord: KordImpl, private val token: String, val http: HttpC
         this.lastSeq = seq
 
         val event: LazyEvent = when (type) {
-            "READY" -> JSON.fromJson(ReadyEventImpl.serializer(), data)
+            "READY" -> JSON.fromJson(ReadyEventImpl.serializer(), data).also {
+                this.sessionId = it.sessionId
+            }
+            "GUILD_CREATE" -> JSON.fromJson(CreateGuildEventImpl.serializer(), data).also {
+                it.guild.init(kord)
+                this.kord.guildCache.set(it.guild.id, it.guild)
+            }
             "MESSAGE_CREATE" -> JSON.fromJson(CreateMessageEventImpl.serializer(), data)
+            "MESSAGE_DELETE" -> JSON.fromJson(DeleteMessageEventImpl.serializer(), data)
             else -> {
-                println("Unhandled dispatch event $type: $payload")
+                logger.warn { "Unhandled dispatch event $type: $payload" }
                 return
             }
         }
@@ -139,12 +164,12 @@ class KordGateway(val kord: KordImpl, private val token: String, val http: HttpC
     }
 
     private suspend fun ClientWebSocketSession.sendHeartbeat() {
-        println("Sending heartbeat...")
+        logger.debug { "Sending heartbeat..." }
         this.send(heartbeatPayload, Int.serializer().nullable)
     }
 
     private suspend fun ClientWebSocketSession.sendIdentify() {
-        println("Identifying...")
+        logger.debug { "Identifying..." }
         this.send(identifyPayload, GatewayPayload.Identify.serializer())
     }
 }

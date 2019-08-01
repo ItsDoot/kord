@@ -5,5 +5,11 @@ import pw.dotdash.kord.api.event.Event
 
 interface MessageEvent : Event {
 
-    val message: Message
+    val guildId: Long?
+
+    val channelId: Long
+
+    val messageId: Long
+
+    val message: Message?
 }

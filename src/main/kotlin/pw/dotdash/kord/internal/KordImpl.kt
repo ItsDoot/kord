@@ -54,10 +54,14 @@ class KordImpl constructor(
     override val events: BroadcastChannel<Event> = eventChannelProvider()
 
     override suspend fun connect() {
+        if (gateway.connected) {
+            throw IllegalStateException("Already connected to the gateway")
+        }
+
         gateway.connect()
     }
 
-    override suspend fun getGuild(id: Long): Guild? {
+    override suspend fun getGuild(id: Long): GuildImpl? {
         val cached = guildCache.get(id)
 
         if (cached == null || cached !is GuildImpl) {
@@ -71,12 +75,12 @@ class KordImpl constructor(
         return cached
     }
 
-    override suspend fun getGuildTextChannel(id: Long): GuildTextChannel? =
+    override suspend fun getGuildTextChannel(id: Long): GuildTextChannelImpl? =
         guildTextChannelCache.getOrFetch(id) {
             http.getEntity("channels/$id", GuildTextChannelImpl.serializer())
         }
 
-    override suspend fun getGuildVoiceChannel(id: Long): GuildVoiceChannel? =
+    override suspend fun getGuildVoiceChannel(id: Long): GuildVoiceChannelImpl? =
         guildVoiceChannelCache.getOrFetch(id) {
             http.getEntity("channels/$id", GuildVoiceChannelImpl.serializer())
         }
@@ -84,10 +88,10 @@ class KordImpl constructor(
     override suspend fun getInvite(code: String): Invite? =
         http.getEntity("invites/$code", InviteImpl.serializer())
 
-    override suspend fun getCurrentUser(): SelfUser =
+    override suspend fun getCurrentUser(): SelfUserImpl =
         http.getEntity("users/@me", SelfUserImpl.serializer())!!
 
-    override suspend fun getUser(id: Long): User? =
+    override suspend fun getUser(id: Long): UserImpl? =
         userCache.getOrFetch(id) {
             http.getEntity("users/$id", UserImpl.serializer())
         }

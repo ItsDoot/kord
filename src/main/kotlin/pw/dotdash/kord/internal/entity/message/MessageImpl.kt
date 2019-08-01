@@ -5,7 +5,6 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
 import pw.dotdash.kord.api.entity.channel.TextChannel
-import pw.dotdash.kord.api.entity.guild.Guild
 import pw.dotdash.kord.api.entity.message.Embed
 import pw.dotdash.kord.api.entity.message.Emoji
 import pw.dotdash.kord.api.entity.message.Message
@@ -13,6 +12,8 @@ import pw.dotdash.kord.api.entity.message.MessageType
 import pw.dotdash.kord.api.entity.user.User
 import pw.dotdash.kord.internal.KordImpl
 import pw.dotdash.kord.internal.entity.LazyEntity
+import pw.dotdash.kord.internal.entity.guild.GuildImpl
+import pw.dotdash.kord.internal.entity.guild.MemberImpl
 import pw.dotdash.kord.internal.entity.user.UserImpl
 import pw.dotdash.kord.internal.serial.OffsetDateTimeSerializer
 import pw.dotdash.kord.internal.serial.StringBuilderSerializer
@@ -43,13 +44,22 @@ data class MessageImpl(
     @Transient
     override lateinit var kord: KordImpl
 
+    @Transient
+    override val edited: Boolean get() = editedTimestamp != null
+
+    @Transient
+    override val jumpUrl: String
+        get() = "https://discordapp.com/channels/${guildId ?: "@me"}/$channelId/$id"
+
     override suspend fun init(kord: KordImpl) {
         this.kord = kord
     }
 
     override suspend fun channel(): TextChannel = kord.getGuildTextChannel(channelId)!!
 
-    override suspend fun guild(): Guild = kord.getGuild(guildId!!)!!
+    override suspend fun guild(): GuildImpl? = guildId?.let { kord.getGuild(it) }
+
+    override suspend fun member(): MemberImpl? = guild()?.getMember(author.id)
 
     /**
      * FIXME - Timeout error

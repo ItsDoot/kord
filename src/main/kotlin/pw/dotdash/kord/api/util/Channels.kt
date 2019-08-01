@@ -21,3 +21,11 @@ suspend inline fun <reified R> ReceiveChannel<*>.waitFor(predicate: (R) -> Boole
 
     throw IllegalStateException("Did not receive a ${R::class}")
 }
+
+suspend inline fun <reified T> ReceiveChannel<*>.listen(block: (T) -> Unit) {
+    for (event in this) {
+        if (event is T) {
+            block(event)
+        }
+    }
+}

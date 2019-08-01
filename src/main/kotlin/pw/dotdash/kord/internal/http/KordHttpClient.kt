@@ -24,7 +24,7 @@ class KordHttpClient(val kord: KordImpl, val token: String, val http: HttpClient
     companion object {
         const val apiVersion = 6
         const val apiUrl = "https://discordapp.com/api/v$apiVersion"
-        const val cdnUrl = "https://cdn.discordapp.com/"
+        const val cdnUrl = "https://cdn.discordapp.com"
 
         const val userAgent = "DiscordBot (https://github.com/thedoot/kord, 0.1.0)"
     }
@@ -39,7 +39,7 @@ class KordHttpClient(val kord: KordImpl, val token: String, val http: HttpClient
             this.method = method
             this.url("$apiUrl/$path")
             header(HttpHeaders.Authorization, "Bot $token")
-            header(HttpHeaders.UserAgent, "DiscordBot (https://github.com/thedoot/kord, 0.1.0)")
+            header(HttpHeaders.UserAgent, userAgent)
             accept(ContentType.Application.Json)
             if (body != null) {
                 this.body = TextContent(

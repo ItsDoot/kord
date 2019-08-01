@@ -11,6 +11,15 @@ data class CreateMessageEventImpl(override val message: MessageImpl) : CreateMes
     @Transient
     override lateinit var kord: KordImpl
 
+    @Transient
+    override val guildId: Long? get() = message.guildId
+
+    @Transient
+    override val channelId: Long get() = message.channelId
+
+    @Transient
+    override val messageId: Long get() = message.id
+
     override fun init(kord: KordImpl) {
         this.kord = kord
         message.kord = kord
