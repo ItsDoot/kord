@@ -1,5 +1,6 @@
 package pw.dotdash.kord.api.entity.message
 
+import pw.dotdash.kord.api.util.Rgb
 import java.time.OffsetDateTime
 
 interface Embed {
@@ -14,7 +15,7 @@ interface Embed {
 
     val timestamp: OffsetDateTime?
 
-    val color: Int?
+    val color: Rgb?
 
     val footer: Footer?
 
@@ -176,7 +177,7 @@ interface Embed {
 
         var timestamp: OffsetDateTime?
 
-        var color: Int?
+        var color: Rgb?
 
         fun footer(build: Footer.Builder.() -> Unit)
 

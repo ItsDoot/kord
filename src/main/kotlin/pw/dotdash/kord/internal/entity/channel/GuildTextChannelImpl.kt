@@ -48,9 +48,9 @@ data class GuildTextChannelImpl(
     override suspend fun getMessage(id: Long): MessageImpl? =
         kord.http.getEntity("channels/${this.id}/messages/$id", MessageImpl.serializer())
 
-    override suspend fun createMessage(build: Message.Builder.() -> Unit): MessageImpl? {
-        val body = TypedBody(MessageImpl.BuilderImpl.serializer(), MessageImpl.BuilderImpl().apply(build))
-        return kord.http.postEntity("channels/$id/messages", MessageImpl.serializer(), body)
+    override suspend fun createMessage(build: suspend Message.Builder.() -> Unit): MessageImpl {
+        val body = TypedBody(MessageImpl.BuilderImpl.serializer(), MessageImpl.BuilderImpl().apply { build() })
+        return kord.http.postEntity("channels/$id/messages", MessageImpl.serializer(), body)!!
     }
 
     override suspend fun triggerTyping(): Boolean =

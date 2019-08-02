@@ -156,7 +156,9 @@ class KordGateway(val kord: KordImpl, private val token: String, val http: HttpC
 
         event.init(kord)
 
+        event.preProcess()
         kord.events.send(event)
+        event.postProcess()
     }
 
     private suspend fun <T> ClientWebSocketSession.send(payload: GatewayPayload<T>, d: KSerializer<T>) {

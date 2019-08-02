@@ -15,6 +15,7 @@ import pw.dotdash.kord.internal.entity.LazyEntity
 import pw.dotdash.kord.internal.entity.guild.GuildImpl
 import pw.dotdash.kord.internal.entity.guild.MemberImpl
 import pw.dotdash.kord.internal.entity.user.UserImpl
+import pw.dotdash.kord.internal.http.TypedBody
 import pw.dotdash.kord.internal.serial.OffsetDateTimeSerializer
 import pw.dotdash.kord.internal.serial.StringBuilderSerializer
 import java.time.OffsetDateTime
@@ -55,11 +56,14 @@ data class MessageImpl(
         this.kord = kord
     }
 
-    override suspend fun channel(): TextChannel = kord.getGuildTextChannel(channelId)!!
+    override suspend fun channel(): TextChannel =
+        kord.getGuildTextChannel(channelId)!!
 
-    override suspend fun guild(): GuildImpl? = guildId?.let { kord.getGuild(it) }
+    override suspend fun guild(): GuildImpl? =
+        guildId?.let { kord.getGuild(it) }
 
-    override suspend fun member(): MemberImpl? = guild()?.getMember(author.id)
+    override suspend fun member(): MemberImpl? =
+        guild()?.getMember(author.id)
 
     /**
      * FIXME - Timeout error
@@ -77,9 +81,16 @@ data class MessageImpl(
     override suspend fun delete(): Boolean =
         kord.http.delete("channels/$channelId/messages/$id")
 
-    override suspend fun pin(): Boolean = kord.http.put("channels/$channelId/pins/$id")
+    override suspend fun pin(): Boolean =
+        kord.http.put("channels/$channelId/pins/$id")
 
-    override suspend fun unpin(): Boolean = kord.http.delete("channels/$channelId/pins/$id")
+    override suspend fun unpin(): Boolean =
+        kord.http.delete("channels/$channelId/pins/$id")
+
+    override suspend fun reply(build: suspend Message.Builder.() -> Unit): Message {
+        val body = TypedBody(BuilderImpl.serializer(), BuilderImpl().apply { build() })
+        return kord.http.postEntity("channels/$channelId/messages", serializer(), body)!!
+    }
 
     @Serializable
     data class ActivityImpl(

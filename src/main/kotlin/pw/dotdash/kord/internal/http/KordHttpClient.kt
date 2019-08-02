@@ -12,6 +12,7 @@ import io.ktor.http.*
 import io.ktor.http.content.TextContent
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.list
+import mu.KotlinLogging
 import pw.dotdash.kord.api.exception.InvalidRequestException
 import pw.dotdash.kord.api.exception.InvalidTokenException
 import pw.dotdash.kord.internal.KordImpl
@@ -20,6 +21,8 @@ import pw.dotdash.kord.internal.entity.LazyEntity
 import pw.dotdash.kord.internal.entity.guild.LazyGuildEntity
 
 class KordHttpClient(val kord: KordImpl, val token: String, val http: HttpClient) {
+
+    val logger = KotlinLogging.logger("KordHttpClient")
 
     companion object {
         const val apiVersion = 6
@@ -49,6 +52,8 @@ class KordHttpClient(val kord: KordImpl, val token: String, val http: HttpClient
             }
             extra()
         }.response
+
+        logger.debug { response.headers.entries().joinToString { (key, value) -> "$key=$value" } }
 
         when (response.status.value) {
             400 -> throw InvalidRequestException()

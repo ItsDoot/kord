@@ -13,7 +13,7 @@ interface TextChannel : Channel {
 
     suspend fun getMessage(id: Long) : Message?
 
-    suspend fun createMessage(build: Message.Builder.() -> Unit): Message?
+    suspend fun createMessage(build: suspend Message.Builder.() -> Unit): Message
 
     suspend fun triggerTyping(): Boolean
 

@@ -20,9 +20,13 @@ data class CreateMessageEventImpl(override val message: MessageImpl) : CreateMes
     @Transient
     override val messageId: Long get() = message.id
 
-    override fun init(kord: KordImpl) {
+    override suspend fun init(kord: KordImpl) {
         this.kord = kord
         message.kord = kord
+    }
+
+    override suspend fun preProcess() {
+        this.kord
     }
 
     @Serializer(CreateMessageEventImpl::class)

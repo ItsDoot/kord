@@ -3,6 +3,7 @@ package pw.dotdash.kord.internal.entity.message
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import pw.dotdash.kord.api.entity.message.Embed
+import pw.dotdash.kord.api.util.Rgb
 import pw.dotdash.kord.internal.serial.OffsetDateTimeSerializer
 import java.time.OffsetDateTime
 
@@ -13,7 +14,7 @@ data class EmbedImpl(
     override val description: String? = null,
     override val url: String? = null,
     @Serializable(OffsetDateTimeSerializer::class) override val timestamp: OffsetDateTime? = null,
-    override val color: Int? = null,
+    override val color: Rgb? = null,
     override val footer: FooterImpl? = null,
     override val image: ImageImpl? = null,
     override val thumbnail: ThumbnailImpl? = null,
@@ -139,7 +140,7 @@ data class EmbedImpl(
         override var description: String? = null,
         override var url: String? = null,
         @Serializable(OffsetDateTimeSerializer::class) override var timestamp: OffsetDateTime? = null,
-        override var color: Int? = null
+        override var color: Rgb? = null
     ) : Embed.Builder {
 
         var footer: FooterImpl.BuilderImpl? = null

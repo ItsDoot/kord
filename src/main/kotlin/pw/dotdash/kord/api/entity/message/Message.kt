@@ -71,6 +71,8 @@ interface Message : Entity, Identifiable {
 
     suspend fun unpin(): Boolean
 
+    suspend fun reply(build: suspend Builder.() -> Unit): Message
+
     interface Activity {
 
         val type: Int

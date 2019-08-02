@@ -5,5 +5,9 @@ import pw.dotdash.kord.internal.KordImpl
 
 interface LazyEvent : Event {
 
-    fun init(kord: KordImpl)
+    suspend fun init(kord: KordImpl)
+
+    suspend fun preProcess() = Unit
+
+    suspend fun postProcess() = Unit
 }
